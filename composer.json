@@ -1,0 +1,26 @@
+{
+    "name": "dcvn/moving-average",
+    "description": "Calculate Moving Averages",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Jeroen van der Sande",
+            "email": "jeroen@dcvn.nl"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "Dcvn\\Math\\Statistics\\": "src/"
+        },
+        "files": [
+            "src/functions.php"
+        ]
+    },
+    "require": {
+        "php": "^7.1"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^9"
+    }
+}
