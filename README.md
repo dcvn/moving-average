@@ -1,3 +1,8 @@
+
+[![GitHub license](https://img.shields.io/github/license/dcvn/moving-average)](https://github.com/dcvn/moving-average/blob/master/LICENSE)
+[![GitHub release](https://img.shields.io/github/v/release/dcvn/moving-average.svg)](https://github.com/dcvn/moving-average/releases/latest)
+
+
 # Moving Average
 
 Calculate Moving Averages.
@@ -11,7 +16,13 @@ To make numbers visual, I generated some example graphs for this doc.
 
 You can also have a look at the tests for some usage examples.
 
-### Big or small data: Arrays and Generators
+## Installation
+
+Using composer: `composer require dcvn/moving-average`
+
+
+
+## Big or small data: Arrays and Generators
 
 Statistics can have large data sets, and then Generators can help.
 
@@ -39,7 +50,7 @@ The graphs below use this set of values:
 <?php $values = [0, 2, 4, 6, 8, 4, 6, 8, 12, 10, 6, 8, 10, 14, 8, 10];
 ```
 
-#### 1. No average
+### 1. No average
 
 Calculate the "average" over a period of 1,
 you will get the exact same set of values:
@@ -56,7 +67,7 @@ Result values are equal to input values, because of period=1.
 
 ![Plain values](doc/assets/graph-01-plain.jpg)
 
-#### 2. Average over the last n values
+### 2. Average over the last n values
 
 Calculate average over the current value and 3 previous values.
 
@@ -67,7 +78,7 @@ $movingAverage->setPeriod(4);
 ```
 ![Average last 4 values](doc/assets/graph-02-avg_4.jpg)
 
-#### 3. Weighted average over the last n values
+### 3. Weighted average over the last n values
 
 Calculate average over the current value and 3 previous values, with different importance.
 In the example, current value is least important (w=1), previous value most (w=5).

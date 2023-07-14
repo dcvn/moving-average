@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Dcvn\Math\Statistics;
 
 use DivisionByZeroError;
@@ -10,52 +12,57 @@ use LogicException;
 class MovingAverage
 {
     // Actual constant values are irrelevant and subject to change.
-    const ARITHMETIC          = 1;
-    const WEIGHTED_ARITHMETIC = 2;
+    public const ARITHMETIC          = 1;
+    public const WEIGHTED_ARITHMETIC = 2;
 
-    protected $method;
+    /**
+     * Average calculation method (a class constant).
+     *
+     * @var int
+     */
+    protected int $method;
 
     /**
      * Number of values to take an average from.
      *
      * @var int >= 1, >= delay
      */
-    protected $period;
+    protected int $period;
 
     /**
      * Delay of output for an input key.
      *
      * @var int >= 0, <= period
      */
-    protected $delay;
+    protected int $delay;
 
     /**
      * A series of weight for the set from left to right.
      *
-     * @var array count() == period
+     * @var array<int,int|float> count() == period
      */
-    protected $weights;
+    protected array $weights;
 
     /**
      * Current set (FIFO) to calculate the average for.
      * New values are appended at the end of the array,
      * Old values are removed from the beginning of the array.
      *
-     * @var array count() <= period
+     * @var array<int|float|null> count() <= period
      */
-    protected $set;
+    protected array $set;
 
     /**
      * FIFO keys for delayed output.
      *
-     * @var array count() <= delay
+     * @var array<string|int|float> count() <= delay
      */
-    protected $delayKeys;
+    protected array $delayKeys;
 
     /**
-     * @param string|int $method A method constant
+     * @param int $method A method constant
      */
-    public function __construct($method = null)
+    public function __construct(int $method = null)
     {
         $this->setMethod($method);
 
@@ -63,11 +70,11 @@ class MovingAverage
     }
 
     /**
-     * @param string|int $method A method constant
+     * @param int|null $method A method constant
      *
      * @throws InvalidArgumentException
      */
-    private function setMethod($method)
+    private function setMethod(?int $method): void
     {
         if (! \in_array($method, [
             null,
@@ -83,7 +90,7 @@ class MovingAverage
     /**
      * Clear the internal data buffers.
      */
-    public function clear()
+    public function clear(): void
     {
         $this->set       = [];
         $this->delayKeys = [];
@@ -92,7 +99,7 @@ class MovingAverage
     /**
      * Reset to default settings (and clear data).
      */
-    public function reset()
+    public function reset(): void
     {
         $this->clear();
 
@@ -106,10 +113,10 @@ class MovingAverage
      *
      * @throws InvalidArgumentException
      */
-    public function assertValidSettings()
+    public function assertValidSettings(): void
     {
         if ($this->validateSettings()) {
-            return true;
+            return;
         }
 
         throw new InvalidArgumentException('invalid_setting_combination');
@@ -144,7 +151,7 @@ class MovingAverage
      *
      * @param int $defaultWeight The default weight value.
      */
-    public function setDefaultWeightsForPeriod(int $defaultWeight = 1)
+    public function setDefaultWeightsForPeriod(int $defaultWeight = 1): self
     {
         $this->weights = \array_fill(0, $this->period, $defaultWeight);
 
@@ -156,7 +163,7 @@ class MovingAverage
      *
      * @param int $period Number of items in an average set.
      */
-    public function setPeriod(int $period)
+    public function setPeriod(int $period): self
     {
         $this->period = $period;
 
@@ -168,11 +175,11 @@ class MovingAverage
     }
 
     /**
-     * Set the size of historic items to use for average calculation.
+     * Set the delay before starting to calculate average.
      *
-     * @param int $period Number of items in an average set.
+     * @param int $delay The delay.
      */
-    public function setDelay(int $delay)
+    public function setDelay(int $delay): self
     {
         $this->delay = $delay;
 
@@ -182,9 +189,9 @@ class MovingAverage
     /**
      * Set the weight for items in the set. Count should be equal to Period.
      *
-     * @param array $weights The weights.
+     * @param array<int,int|float> $weights The weights.
      */
-    public function setWeights(array $weights)
+    public function setWeights(array $weights): self
     {
         $this->weights = $weights;
 
@@ -214,7 +221,7 @@ class MovingAverage
     /**
      * Get the weights.
      *
-     * @return array
+     * @return array<int,int|float>
      */
     public function getWeights(): array
     {
@@ -224,10 +231,9 @@ class MovingAverage
     /**
      * Add a value to the set, and drop the oldest value when set is full.
      *
-     * @param float|int        $value The new value for the set.
-     * @param string|int|float $key   The key of the new value for the set.
+     * @param float|int|null $value The new value for the set.
      */
-    protected function pushValue($value)
+    protected function pushValue(float|int|null $value): void
     {
         \array_push($this->set, $value); // add at end
         if (\count($this->set) > $this->period) {
@@ -241,9 +247,9 @@ class MovingAverage
      *
      * @param string|int|float $key New key.
      *
-     * @return string|int|float Next delayed key.
+     * @return string|int|float|null Next delayed key.
      */
-    protected function pushKey($key)
+    protected function pushKey(string|int|float $key): string|int|float|null
     {
         $delayedKey = null;
 
@@ -288,17 +294,21 @@ class MovingAverage
         // When the size of set < period, use right part of the weights.
         $weights = \array_slice($this->weights, $this->period - \count($this->set));
 
-        $denominator = \array_sum(\array_map(function ($value, $weight) {
-            return $value === null ? 0 : $weight;
-        }, $this->set, $weights));
+        $denominator = \array_sum(\array_map(
+            fn ($value, $weight) => ($value === null ? 0 : $weight),
+            $this->set,
+            $weights
+        ));
 
         if ($denominator == 0) {
             throw new DivisionByZeroError('empty_set');
         }
 
-        $nominator = \array_sum(\array_map(function ($value, $weight) {
-            return $value === null ? 0 : $value * $weight;
-        }, $this->set, $weights));
+        $nominator = \array_sum(\array_map(
+            fn ($value, $weight) => ($value === null ? 0 : $value * $weight),
+            $this->set,
+            $weights
+        ));
 
         return $nominator / $denominator;
     }
@@ -306,14 +316,14 @@ class MovingAverage
     /**
      * For delayed results, continue looping until delay is over.
      *
-     * @param array $results The results array to append to (by reference).
+     * @param array<string|int|float,float> $results The results array to append to (by reference).
      */
-    protected function appendDelayToArray(array &$results)
+    protected function appendDelayToArray(array &$results): void
     {
         for ($delay = $this->delay; $delay > 0; $delay--) {
             $delayKey = '_delay:' . $delay;
 
-            list($avgValue, $avgKey) = $this->calculateNext(null, $delayKey);
+            [$avgValue, $avgKey] = ($this->calculateNext(null, $delayKey) ?? [0.0, '']);
 
             $results[$avgKey]= $avgValue;
         }
@@ -321,13 +331,15 @@ class MovingAverage
 
     /**
      * For delayed results, continue looping until delay is over.
+     *
+     * @return Generator<string|int|float,float>
      */
-    protected function appendDelayToGenerator()
+    protected function appendDelayToGenerator(): Generator
     {
         for ($delay = $this->delay; $delay > 0; $delay--) {
             $delayKey = '_delay:' . $delay;
 
-            list($avgValue, $avgKey) = $this->calculateNext(null, $delayKey);
+            [$avgValue, $avgKey] = ($this->calculateNext(null, $delayKey) ?? [0.0, '']);
 
             yield $avgKey => $avgValue;
         }
@@ -336,27 +348,22 @@ class MovingAverage
     /**
      * Calculate the next average when adding a new value.
      *
-     * @param float|int        $value The new value for the set.
+     * @param float|int|null   $value The new value for the set.
      * @param string|int|float $key   The key of the new value for the set.
      *
      * @throws LogicException
      *
-     * @return array{0:int|float,1:string|int|float} The next average, a [$value, $key] pair.
+     * @return array{0:float,1:string|int|float}|null The next average, a [$value, $key] pair.
      */
-    public function calculateNext($value, $key): ?array
+    public function calculateNext(float|int|null $value, string|int|float $key): ?array
     {
         $this->pushValue($value);
 
-        switch ($this->method) {
-            case self::ARITHMETIC:
-                $average = $this->calculateSimpleAverage();
-                break;
-            case self::WEIGHTED_ARITHMETIC:
-                $average = $this->calculateWeightedAverage();
-                break;
-            default:
-                throw new LogicException('invalid_method');
-        }
+        $average = match ($this->method) {
+            self::ARITHMETIC => $this->calculateSimpleAverage(),
+            self::WEIGHTED_ARITHMETIC => $this->calculateWeightedAverage(),
+            default => throw new LogicException('invalid_method')
+        };
 
         $resultKey = $this->pushKey($key);
         if ($resultKey === null) {
@@ -369,9 +376,9 @@ class MovingAverage
     /**
      * Get calculated averages from an array.
      *
-     * @param array $sources
+     * @param array<string|int|float,int|float|null> $sources
      *
-     * @return array
+     * @return array<string|int|float,float>
      */
     public function getCalculatedFromArray(array $sources): array
     {
@@ -379,8 +386,9 @@ class MovingAverage
 
         $results = [];
         foreach ($sources as $key => $value) {
-            list($avgValue, $avgKey) = $this->calculateNext($value, $key);
-            if (! \is_null($avgKey)) {
+            $next = $this->calculateNext($value, $key);
+            if (! \is_null($next)) {
+                [$avgValue, $avgKey] = $next;
                 $results[$avgKey] = $avgValue;
             }
         }
@@ -392,17 +400,18 @@ class MovingAverage
     /**
      * Generate averages from from an array.
      *
-     * @param array $sources
+     * @param array<string|int|float,int|float|null> $sources
      *
-     * @return Generator
+     * @return Generator<string|int|float,float>
      */
     public function generateFromArray(array $sources): Generator
     {
         $this->assertValidSettings();
 
         foreach ($sources as $key => $value) {
-            list($avgValue, $avgKey) = $this->calculateNext($value, $key);
-            if (! \is_null($avgKey)) {
+            $next = $this->calculateNext($value, $key);
+            if (! \is_null($next)) {
+                [$avgValue, $avgKey] = $next;
                 yield $avgKey => $avgValue;
             }
         }
@@ -413,9 +422,9 @@ class MovingAverage
     /**
      * Get calculated averages from a generator.
      *
-     * @param Generator $generator
+     * @param Generator<string|int|float,int|float|null> $generator
      *
-     * @return array
+     * @return array<string|int|float,float>
      */
     public function getCalculatedFromGenerator(Generator $generator): array
     {
@@ -423,8 +432,9 @@ class MovingAverage
 
         $results = [];
         while ($generator->valid()) {
-            list($avgValue, $avgKey) = $this->calculateNext($generator->current(), $generator->key());
-            if (! \is_null($avgKey)) {
+            $next = $this->calculateNext($generator->current(), $generator->key());
+            if (! \is_null($next)) {
+                [$avgValue, $avgKey] = $next;
                 $results[$avgKey] = $avgValue;
             }
             $generator->next();
@@ -437,17 +447,18 @@ class MovingAverage
     /**
      * Generate averages from a generator.
      *
-     * @param Generator $generator
+     * @param Generator<string|int|float,int|float|null> $generator
      *
-     * @return Generator
+     * @return Generator<string|int|float,float>
      */
     public function generateFromGenerator(Generator $generator): Generator
     {
         $this->assertValidSettings();
 
         while ($generator->valid()) {
-            list($avgValue, $avgKey) = $this->calculateNext($generator->current(), $generator->key());
-            if (! \is_null($avgKey)) {
+            $next = $this->calculateNext($generator->current(), $generator->key());
+            if (! \is_null($next)) {
+                [$avgValue, $avgKey] = $next;
                 yield $avgKey => $avgValue;
             }
 

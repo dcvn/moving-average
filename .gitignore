@@ -1,4 +1,6 @@
 /vendor/
 /composer.lock
 /phpunit
+/phpstan
 /.php_cs.cache
+/tmp

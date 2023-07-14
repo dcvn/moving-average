@@ -10,7 +10,7 @@ use PHPUnit\Framework\TestCase;
 
 class MovingAverageTest extends TestCase
 {
-    public function testConstructing()
+    public function testConstructing(): void
     {
         $ma1 = new MovingAverage();
 
@@ -20,9 +20,9 @@ class MovingAverageTest extends TestCase
     /**
      * Helper: Convert an array into a Generator.
      *
-     * @param array $array
+     * @param array<string|int|float,int|float|null> $array
      *
-     * @return Generator
+     * @return Generator<string|int|float,int|float|null>
      */
     public function asGenerator(array $array): Generator
     {
@@ -31,14 +31,14 @@ class MovingAverageTest extends TestCase
         }
     }
 
-    public function testSimpleCalculateNext()
+    public function testSimpleCalculateNext(): void
     {
         $method = MovingAverage::ARITHMETIC;
         $mavg   = new MovingAverage($method);
         $mavg->setPeriod(1);
 
         foreach ([1, 2, 3, 4, 5] as $i => $value) {
-            list($average, $key) = $mavg->calculateNext($value, $i);
+            [$average, $key] = ($mavg->calculateNext($value, $i) ?? [0.0, '']);
             $this->assertEquals($value, $average);
             $this->assertEquals($i, $key);
         }
@@ -46,8 +46,10 @@ class MovingAverageTest extends TestCase
 
     /**
      * @dataProvider dataproviderSimpleFromArray
+     * @param array<string,int> $sources
+     * @param array<string,float> $results
      */
-    public function testSimpleCalculatedFromArray(int $period, int $delay, array $sources, array $results)
+    public function testSimpleCalculatedFromArray(int $period, int $delay, array $sources, array $results): void
     {
         $method = MovingAverage::ARITHMETIC;
 
@@ -62,8 +64,10 @@ class MovingAverageTest extends TestCase
 
     /**
      * @dataProvider dataproviderSimpleFromArray
+     * @param array<string,int> $sources
+     * @param array<string,float> $results
      */
-    public function testSimpleGenerateFromArray(int $period, int $delay, array $sources, array $results)
+    public function testSimpleGenerateFromArray(int $period, int $delay, array $sources, array $results): void
     {
         $method = MovingAverage::ARITHMETIC;
 
@@ -78,8 +82,10 @@ class MovingAverageTest extends TestCase
 
     /**
      * @dataProvider dataproviderSimpleFromArray
+     * @param array<string,int> $sources
+     * @param array<string,float> $results
      */
-    public function testSimpleCalculatedFromGenerator(int $period, int $delay, array $sources, array $results)
+    public function testSimpleCalculatedFromGenerator(int $period, int $delay, array $sources, array $results): void
     {
         $method = MovingAverage::ARITHMETIC;
 
@@ -96,8 +102,10 @@ class MovingAverageTest extends TestCase
 
     /**
      * @dataProvider dataproviderSimpleFromArray
+     * @param array<string,int> $sources
+     * @param array<string,float> $results
      */
-    public function testSimpleGenerateFromGenerator(int $period, int $delay, array $sources, array $results)
+    public function testSimpleGenerateFromGenerator(int $period, int $delay, array $sources, array $results): void
     {
         $method = MovingAverage::ARITHMETIC;
 
@@ -112,7 +120,10 @@ class MovingAverageTest extends TestCase
         }
     }
 
-    public function dataproviderSimpleFromArray()
+    /**
+     * @return Generator<string,array<string,int|array<string,int|float>>>
+     */
+    public function dataproviderSimpleFromArray(): Generator
     {
         yield 's1:p3-d0' => [
             'period'  => 3,
@@ -192,8 +203,11 @@ class MovingAverageTest extends TestCase
 
     /**
      * @dataProvider dataproviderWeightedFromArray
+     * @param array<int,int> $weights
+     * @param array<string,int> $sources
+     * @param array<string,float> $results
      */
-    public function testWeightedCalculatedFromArray(int $period, int $delay, array $weights, array $sources, array $results)
+    public function testWeightedCalculatedFromArray(int $period, int $delay, array $weights, array $sources, array $results): void
     {
         $method = MovingAverage::WEIGHTED_ARITHMETIC;
 
@@ -209,8 +223,11 @@ class MovingAverageTest extends TestCase
 
     /**
      * @dataProvider dataproviderWeightedFromArray
+     * @param array<int,int> $weights
+     * @param array<string,int> $sources
+     * @param array<string,float> $results
      */
-    public function testWeightedGenerateFromArray(int $period, int $delay, array $weights, array $sources, array $results)
+    public function testWeightedGenerateFromArray(int $period, int $delay, array $weights, array $sources, array $results): void
     {
         $method = MovingAverage::WEIGHTED_ARITHMETIC;
 
@@ -226,8 +243,11 @@ class MovingAverageTest extends TestCase
 
     /**
      * @dataProvider dataproviderWeightedFromArray
+     * @param array<int,int> $weights
+     * @param array<string,int> $sources
+     * @param array<string,float> $results
      */
-    public function testWeightedCalculatedFromGenerator(int $period, int $delay, array $weights, array $sources, array $results)
+    public function testWeightedCalculatedFromGenerator(int $period, int $delay, array $weights, array $sources, array $results): void
     {
         $method = MovingAverage::WEIGHTED_ARITHMETIC;
 
@@ -245,8 +265,11 @@ class MovingAverageTest extends TestCase
 
     /**
      * @dataProvider dataproviderWeightedFromArray
+     * @param array<int,int> $weights
+     * @param array<string,int> $sources
+     * @param array<string,float> $results
      */
-    public function testWeightedGenerateFromGenerator(int $period, int $delay, array $weights, array $sources, array $results)
+    public function testWeightedGenerateFromGenerator(int $period, int $delay, array $weights, array $sources, array $results): void
     {
         $method = MovingAverage::WEIGHTED_ARITHMETIC;
 
@@ -262,7 +285,10 @@ class MovingAverageTest extends TestCase
         }
     }
 
-    public function dataproviderWeightedFromArray()
+    /**
+     * @return Generator<string,array<string,int|array<string|int,int|float>>>
+     */
+    public function dataproviderWeightedFromArray(): Generator
     {
         yield 'w1:p3-d0' => [
             'period'  => 3,

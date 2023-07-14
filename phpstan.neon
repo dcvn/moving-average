@@ -1,0 +1,11 @@
+includes:
+
+parameters:
+    level: 9
+    tmpDir: tmp/phpstan
+    paths:
+        - src
+        - tests
+    phpVersion: 80000
+    editorUrl: 'atom://core/open/file?filename=%%file%%&line=%%line%%'
+    ignoreErrors:
